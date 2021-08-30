@@ -27,6 +27,12 @@ def conv_bn(in_channels, out_channels, conv, *args, **kwargs):
     return nn.Sequential(conv(in_channels, out_channels, *args, **kwargs), nn.BatchNorm2d(out_channels))
     
 class ResNetResidualBlock(nn.Module):
+    """
+    Simple Residual network architecture 
+    (Main blocks: Contains two convolution layer and a activation function between them,
+    Shortcut: When size of previous conv layer output layer and current conv input layer are different
+    then we apply shortcut)
+    """
     expansion = 1
     def __init__(self, in_channels, out_channels, expansion=1, downsampling=1,conv=conv3x3,activation="relu", *args, **kwargs):
         super().__init__()
@@ -83,6 +89,10 @@ class ResNetLayer(nn.Module):
         return x
 
 class Encoder(nn.Module):
+    """
+    in_channels: input for 1st layer of encoder, 
+    block_size: lenths for layers channels,
+    """
     def __init__(self, in_channels=3, blocks_size=[64, 128, 256, 512], deepths = [2,2,2,2],
                 activation="relu", block=ResNetResidualBlock,*args, **kwargs):
         super().__init__()
