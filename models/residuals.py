@@ -160,7 +160,7 @@ def resnet50(in_channels,n_classes, block=ResNetResidualBlock, *args, **kwargs):
 def resnet101(in_channels, n_classes, block=ResNetResidualBlock, *args, **kwargs):
     return ResNet(in_channels, n_classes, block=block, deepths=[3,4,23,3], *args, **kwargs)
 
-def resnet152(in_channels)def resnet152(in_channels, n_classes, block=ResNetBottleNeckBlock, *args, **kwargs):
+def resnet152(in_channels, n_classes, block=ResNetBottleNeckBlock, *args, **kwargs):
     return ResNet(in_channels, n_classes, block=block, deepths=[3, 8, 36, 3], *args, **kwargs)
 
 
