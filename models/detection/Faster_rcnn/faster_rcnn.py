@@ -7,41 +7,54 @@ import torch.nn.functional as F
 import os
 import sys
 
-configfile = "../../residuals.py"
+configfile = "../../"
 sys.path.append(os.path.dirname(os.path.expanduser(configfile)))
-from residuals import resnet50, resnet34, resnet18, resnet101
+from vgg16 import vggnet
 
 class BackBone(nn.Module):
-    def __init__(self, images, min_size, max_size, netWork = resnet50(), target: List[Dict[str, Tensor]]= None):
+    def __init__(self,min_size, max_size, netWork = vggnet(n_classes=1000)):
         super().__init__()
         self.netWork = netWork
-        self.target = target
         self.min_size = min_size
         self.max_size = max_size
 
-    def forward(self, img, target = None):
-        img = [i for i in img]
-        if target in not None:
+    def forward(self, imgs, target = None):
+        imgs = [i for i in imgs]
+        if target is not None:
             target_copy: List[Dict[str, Tensor]] = []
             for t in target:
                 data: Dict[str, Tensor] = {}
                 for k, v in t.items():
                     data[k] = v
                 target_copy.append(data)
-            targets = target_copy
+            target = target_copy
+        
+        for i in range(len(imgs)):
+            image = imgs[i]
+            target = target[i] if target is not None else None
+            image, target = self.resize_image_and_mask(image, self.min_size, self.max_size)           
+            imgs[i] = image
+            if target is not None:
+                target[i] = target
 
-        for i in range(len(img)):
-            image = img[i]
-            target = targets[i] if targets is not None else None
+        images = torch.stack(imgs, dim=0) 
+        req_features = []
+        model = self.netWork
+        fc = list(model.features)
+        k = images
+        for i in fc: 
+            k = i(k)
+            if k.shape[-1] <= self.min_size // 16:
+                break
+            req_features.append(i)
+            out_channels = k.size()[1]
 
-            image, target = self.resize_image_and_mask(image,target)           
-            img[i] = image
-            if targets is not None and target is not None:
-                targets[i] = target
+        feature_extractor = nn.Sequential(*req_features)
+        image = feature_extractor(images)
+        
+        return image, target
 
-
-
-    def resize_image_and_mask(img: Tensor, img_min_size: float, img_max_size: float, target: Optional[Dict[str, Tensor]] = None):
+    def resize_image_and_mask(self,img: Tensor, img_min_size: float, img_max_size: float, target: Optional[Dict[str, Tensor]] = None):
 
         img_current_shape = torch.tensor(img.shape[-2:])
 
@@ -88,3 +101,10 @@ class BackBone(nn.Module):
 
         return image,target
 
+# class RPNetwork(nn.Module):
+
+
+# images = torch.rand(4,3,254, 254)
+
+# model = BackBone(min_size=600, max_size=1000)
+# model(images)
