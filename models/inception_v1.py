@@ -426,7 +426,8 @@ class InceptionI(nn.Module):
         return torch.cat(output, 1)
 
 
-def GoogleNet(in_channels=3, num_classes=1000,train=False):
+def GoogleNet(in_channels=3, num_classes=100,train=False):
     return BasicInception(in_channels=in_channels,num_classes=num_classes,train=train)
+
 
 
